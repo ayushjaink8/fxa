@@ -32,6 +32,8 @@ const eventInvoicePaymentFailed = require('../../payments/fixtures/stripe/event_
 const eventCustomerUpdated = require('../../payments/fixtures/stripe/event_customer_updated.json');
 const eventCustomerSubscriptionUpdated = require('../../payments/fixtures/stripe/event_customer_subscription_updated.json');
 const eventCustomerSourceExpiring = require('../../payments/fixtures/stripe/event_customer_source_expiring.json');
+const eventProductUpdated = require('../../payments/fixtures/stripe/product_updated_event.json');
+const eventPlanUpdated = require('../../payments/fixtures/stripe/plan_updated_event.json');
 const eventCreditNoteCreated = require('../../payments/fixtures/stripe/event_credit_note_created.json');
 const failedDoReferenceTransactionResponse = require('../../payments/fixtures/paypal/do_reference_transaction_failure.json');
 const { default: Container } = require('typedi');
@@ -257,6 +259,8 @@ describe('StripeWebhookHandler', () => {
         'handleSubscriptionDeletedEvent',
         'handleCustomerUpdatedEvent',
         'handleCustomerSourceExpiringEvent',
+        'handleProductUpdatedEvent',
+        'handlePlanUpdatedEvent',
         'handleCreditNoteEvent',
         'handleInvoicePaidEvent',
         'handleInvoicePaymentFailedEvent',
@@ -378,6 +382,17 @@ describe('StripeWebhookHandler', () => {
           'handleCustomerSourceExpiringEvent',
           eventCustomerSourceExpiring
         );
+      });
+
+      describe('when the event.type is product.updated', () => {
+        itOnlyCallsThisHandler(
+          'handleProductUpdatedEvent',
+          eventProductUpdated
+        );
+      });
+
+      describe('when the event.type is plan.updated', () => {
+        itOnlyCallsThisHandler('handlePlanUpdatedEvent', eventPlanUpdated);
       });
 
       describe('when the event.type is credit_note.created', () => {

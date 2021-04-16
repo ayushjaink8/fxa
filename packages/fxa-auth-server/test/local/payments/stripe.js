@@ -1324,6 +1324,26 @@ describe('StripeHelper', () => {
 
   describe('fetchAllPlans', () => {
     it('only returns valid plans', async () => {
+      const validProductMetadata = {
+        webIconURL: 'https://example.com/static/icon.svg',
+        upgradeCTA: 'hello <a href="http://example.org">world</a>',
+        downloadURL: 'https://example.com/download',
+        appStoreLink: 'https://example.com/appStoreRedirect',
+        playStoreLink: 'https://example.com/playStoreRedirect',
+        'product:privacyNoticeURL':
+          'https://accounts-static.cdn.mozilla.net/legal/privacy',
+        'product:privacyNoticeDownloadURL':
+          'https://accounts-static.cdn.mozilla.net/legal/privacy.pdf',
+        'product:termsOfServiceURL':
+          'https://accounts-static.cdn.mozilla.net/legal/terms',
+        'product:termsOfServiceDownloadURL':
+          'https://accounts-static.cdn.mozilla.net/legal/terms.pdf',
+        productSet: '123done',
+        productOrder: 2,
+        capabilities: 'comma,separated,values',
+        'capabilities:aFakeClientId12345': 'more,comma,separated,values',
+      };
+
       const planMissingProduct = {
         id: 'plan_noprod',
         object: 'plan',
@@ -1342,6 +1362,16 @@ describe('StripeHelper', () => {
         product: { deleted: true },
       };
 
+      const planInvalidProductMetadata = {
+        id: 'plan_invalidproductmetadata',
+        object: 'plan',
+        product: {
+          metadata: Object.assign({}, validProductMetadata, {
+            'product:privacyNoticeDownloadURL': 'https://example.com',
+          }),
+        },
+      };
+
       const goodPlan = deepCopy(plan1);
       goodPlan.product = deepCopy(product1);
 
@@ -1349,6 +1379,7 @@ describe('StripeHelper', () => {
         planMissingProduct,
         planUnloadedProduct,
         planDeletedProduct,
+        planInvalidProductMetadata,
         goodPlan,
       ];
 
@@ -1376,7 +1407,7 @@ describe('StripeHelper', () => {
       assert.deepEqual(actual, expected);
 
       /** Verify the error cases were handled properly */
-      assert.equal(stripeHelper.log.error.callCount, 3);
+      assert.equal(stripeHelper.log.error.callCount, 4);
 
       /** Plan.product is null */
       assert.equal(
@@ -1394,6 +1425,12 @@ describe('StripeHelper', () => {
       assert.equal(
         `fetchAllPlans - Plan "${planDeletedProduct.id}" associated with Deleted Product`,
         stripeHelper.log.error.getCall(2).args[0]
+      );
+
+      /** Plan.product has invalid metadata */
+      assert.equal(
+        `fetchAllPlans - Plan "${planInvalidProductMetadata.id}"'s metadata failed validation`,
+        stripeHelper.log.error.getCall(3).args[0]
       );
     });
   });
