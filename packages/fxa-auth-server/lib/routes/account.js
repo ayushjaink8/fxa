@@ -134,13 +134,8 @@ module.exports = (
           throw error.disabledClientId(service);
         }
 
-        const {
-          deviceId,
-          flowId,
-          flowBeginTime,
-          productId,
-          planId,
-        } = await request.app.metricsContext;
+        const { deviceId, flowId, flowBeginTime, productId, planId } =
+          await request.app.metricsContext;
 
         await customs.check(request, email, 'accountCreate');
         await deleteAccountIfUnverified();
@@ -671,12 +666,10 @@ module.exports = (
             verificationMethod = verificationMethod || 'email-otp';
           }
 
-          const [
-            tokenVerificationId,
-            tokenVerificationCode,
-          ] = needsVerificationId
-            ? [await random.hex(16), await TokenCode()]
-            : [];
+          const [tokenVerificationId, tokenVerificationCode] =
+            needsVerificationId
+              ? [await random.hex(16), await TokenCode()]
+              : [];
           const {
             browser: uaBrowser,
             browserVersion: uaBrowserVersion,
@@ -781,7 +774,8 @@ module.exports = (
           // Certain accounts have the ability to *always* skip sign-in confirmation
           // regardless of account age or device. This is for internal use where we need
           // to guarantee the login experience.
-          const lowerCaseEmail = account.primaryEmail.normalizedEmail.toLowerCase();
+          const lowerCaseEmail =
+            account.primaryEmail.normalizedEmail.toLowerCase();
           const alwaysSkip =
             skipConfirmationForEmailAddresses &&
             skipConfirmationForEmailAddresses.includes(lowerCaseEmail);
@@ -864,6 +858,54 @@ module.exports = (
         }
 
         async function createResponse() {
+          const { uid } = sessionToken;
+          const devices = await db.devices(uid);
+
+          // We should be able to pull out UA, location and ipadress to send
+          // along with the push notifiation
+          // const geoData = request.app.geo;
+          // const { ua } = request.app;
+          // const uaInfo = {
+          //   uaBrowser: ua.browser,
+          //   uaBrowserVersion: ua.browserVersion,
+          //   uaOS: ua.os,
+          //   uaOSVersion: ua.osVersion,
+          //   uaDeviceType: ua.deviceType,
+          //   uaFormFactor: ua.formFactor,
+          // };
+          // const links = mailer._ungatedMailer._generateLinks(
+          //     config.smtp.verificationUrl,
+          //     {code: sessionToken.tokenVerificationId},
+          //     {
+          //       code: sessionToken.tokenVerificationId,
+          //       uid: sessionToken.uid
+          //     },
+          //     'verify'
+          // );
+          // const options = {
+          //   code: sessionToken.tokenVerificationCode,
+          //   location: geoData.location,
+          //   ip: request.app.clientAddress,
+          //   time: Date.now(),
+          //   uaInfo,
+          //   link: links.link
+          // };
+
+          const data = {
+            body: 'Hello',
+            title: 'Please verify this login',
+            url: 'https://pixabay.com/images/search/cat/?q=234324234',
+          };
+
+          try {
+            await push.notifyLoginRequest(uid, devices, data);
+          } catch (err) {
+            log.error('Session.push.resend_code', {
+              uid: uid,
+              error: err,
+            });
+          }
+
           const response = {
             uid: sessionToken.uid,
             sessionToken: sessionToken.data,
@@ -1014,9 +1056,8 @@ module.exports = (
             account
           );
           res.authenticationMethods = Array.from(amrValues);
-          res.authenticatorAssuranceLevel = authMethods.maximumAssuranceLevel(
-            amrValues
-          );
+          res.authenticatorAssuranceLevel =
+            authMethods.maximumAssuranceLevel(amrValues);
         }
 
         if (

@@ -428,6 +428,53 @@ module.exports = function (
         return {};
       },
     },
+    {
+      method: 'POST',
+      path: '/session/push/resend_code',
+      options: {
+        auth: {
+          strategy: 'sessionToken',
+        },
+      },
+      handler: async function (request) {
+        log.begin('Session.push.resend_code', request);
+
+        const sessionToken = request.auth.credentials;
+        const { uid } = sessionToken;
+
+        const devices = await db.devices(uid);
+        const geoData = request.app.geo;
+
+        const { ua } = request.app;
+        const uaInfo = {
+          uaBrowser: ua.browser,
+          uaBrowserVersion: ua.browserVersion,
+          uaOS: ua.os,
+          uaOSVersion: ua.osVersion,
+          uaDeviceType: ua.deviceType,
+          uaFormFactor: ua.formFactor,
+        };
+
+        const options = {
+          code: sessionToken.tokenVerificationCode,
+          location: geoData.location,
+          ip: request.app.clientAddress,
+          time: Date.now(),
+          uaInfo,
+        };
+
+        try {
+          await push.notifyLoginRequest(uid, devices, options);
+        } catch (err) {
+          log.error('Session.push.resend_code', {
+            uid: uid,
+            error: err,
+          });
+        }
+
+        return {};
+      },
+    },
   ];
 
   return routes;

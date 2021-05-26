@@ -17,6 +17,7 @@ const PUSH_COMMANDS = {
   PASSWORD_RESET: 'fxaccounts:password_reset',
   ACCOUNT_DESTROYED: 'fxaccounts:account_destroyed',
   COMMAND_RECEIVED: 'fxaccounts:command_received',
+  LOGIN_REQUEST: 'fxaccounts:verify_login',
 };
 
 const PUSH_REASONS = new Set([
@@ -30,6 +31,7 @@ const PUSH_REASONS = new Set([
   'devicesNotify',
   'accountDestroyed',
   'commandReceived',
+  'loginRequest',
 ]);
 
 const PUSH_ERRORS = new Set([
@@ -335,6 +337,23 @@ module.exports = function (log, db, config, statsd) {
           },
         },
         TTL: TTL_ACCOUNT_DESTROYED,
+      });
+    },
+
+    /**
+     *
+     * @param {String} uid
+     * @param {Device[]} devices
+     * @param {Object} data
+     * @promise
+     */
+    notifyLoginRequest(uid, devices, data) {
+      return this.sendPush(uid, devices, 'loginRequest', {
+        data: {
+          version: PUSH_PAYLOAD_SCHEMA_VERSION,
+          command: PUSH_COMMANDS.LOGIN_REQUEST,
+          data,
+        },
       });
     },
 
