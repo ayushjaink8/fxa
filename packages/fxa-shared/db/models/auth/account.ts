@@ -8,6 +8,8 @@ import { Email } from './email';
 import { Device } from './device';
 import { uuidTransformer } from '../../transformers';
 
+const ER_DUP_ENTRY = 1062;
+
 export type AccountOptions = {
   include?: 'emails'[];
 };
@@ -83,6 +85,66 @@ export class Account extends AuthBaseModel {
       relation: AuthBaseModel.HasManyRelation,
     },
   };
+
+  static async create({
+    uid,
+    normalizedEmail,
+    email,
+    emailCode,
+    emailVerified,
+    kA,
+    wrapWrapKb,
+    authSalt,
+    verifierVersion,
+    verifyHash,
+    verifierSetAt,
+    createdAt,
+    locale,
+  }: Pick<
+    Account,
+    | 'uid'
+    | 'normalizedEmail'
+    | 'email'
+    | 'emailCode'
+    | 'emailVerified'
+    | 'kA'
+    | 'wrapWrapKb'
+    | 'authSalt'
+    | 'verifierVersion'
+    | 'verifyHash'
+    | 'verifierSetAt'
+    | 'createdAt'
+    | 'locale'
+  >) {
+    try {
+      await Account.callProcedure(
+        Proc.CreateAccount,
+        uuidTransformer.to(uid),
+        normalizedEmail,
+        email,
+        uuidTransformer.to(emailCode),
+        emailVerified,
+        uuidTransformer.to(kA),
+        uuidTransformer.to(wrapWrapKb),
+        uuidTransformer.to(authSalt),
+        verifierVersion,
+        uuidTransformer.to(verifyHash),
+        verifierSetAt,
+        createdAt,
+        locale ?? ''
+      );
+    } catch (e) {
+      if (e.errno === ER_DUP_ENTRY) {
+        // Throw an error that looks like the old db-mysql version
+        const error: any = new Error();
+        error.errno = 101;
+        error.statusCode = 409;
+        throw error;
+      } else {
+        throw e;
+      }
+    }
+  }
 
   static async checkPassword(uid: string, verifyHash: string) {
     const count = await Account.query()

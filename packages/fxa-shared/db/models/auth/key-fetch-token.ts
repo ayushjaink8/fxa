@@ -22,6 +22,28 @@ export class KeyFetchToken extends AuthBaseModel {
   verifierSetAt!: number;
   tokenVerificationId?: string;
 
+  static async create({
+    id,
+    authKey,
+    uid,
+    keyBundle,
+    createdAt,
+    tokenVerificationId,
+  }: Pick<
+    KeyFetchToken,
+    'authKey' | 'uid' | 'keyBundle' | 'createdAt' | 'tokenVerificationId'
+  > & { id: string }) {
+    return KeyFetchToken.callProcedure(
+      Proc.CreateKeyFetchToken,
+      uuidTransformer.to(id),
+      uuidTransformer.to(authKey),
+      uuidTransformer.to(uid),
+      uuidTransformer.to(keyBundle),
+      createdAt,
+      tokenVerificationId ? uuidTransformer.to(tokenVerificationId) : null
+    );
+  }
+
   static async findByTokenId(
     id: string,
     withVerificationStatus: boolean = false

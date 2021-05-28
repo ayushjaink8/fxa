@@ -19,6 +19,24 @@ export class PasswordChangeToken extends AuthBaseModel {
   email!: string;
   verifierSetAt!: number;
 
+  static async create({
+    id,
+    data,
+    uid,
+    createdAt,
+  }: Pick<PasswordChangeToken, 'uid' | 'createdAt'> & {
+    id: string;
+    data: string;
+  }) {
+    return PasswordChangeToken.callProcedure(
+      Proc.CreatePasswordChangeToken,
+      uuidTransformer.to(id),
+      uuidTransformer.to(data),
+      uuidTransformer.to(uid),
+      createdAt
+    );
+  }
+
   static async findByTokenId(id: string) {
     const rows = await PasswordChangeToken.callProcedure(
       Proc.PasswordChangeToken,

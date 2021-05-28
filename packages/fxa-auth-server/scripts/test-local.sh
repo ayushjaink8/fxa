@@ -20,17 +20,17 @@ node -r ts-node/register ./scripts/oauth-db-patcher.js
 
 GLOB=$*
 if [ -z "$GLOB" ]; then
-  echo "Local tests"
-  ./scripts/mocha-coverage.js $DEFAULT_ARGS test/local
+  # echo "Local tests"
+  # ./scripts/mocha-coverage.js $DEFAULT_ARGS test/local
 
-  echo "Oauth tests"
-  ./scripts/mocha-coverage.js $DEFAULT_ARGS test/oauth
+  # echo "Oauth tests"
+  # ./scripts/mocha-coverage.js $DEFAULT_ARGS test/oauth
 
   echo "Remote tests"
   ./scripts/mocha-coverage.js $DEFAULT_ARGS test/remote
 
-  echo "Script tests"
-  ./scripts/mocha-coverage.js $DEFAULT_ARGS test/scripts
+  # echo "Script tests"
+  # ./scripts/mocha-coverage.js $DEFAULT_ARGS test/scripts
 
 else
   ./scripts/mocha-coverage.js $DEFAULT_ARGS $GLOB
